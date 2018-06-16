@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,13 +52,13 @@ public class PreFilter extends ZuulFilter {
     RequestContext ctx = getCurrentContext();
     HttpServletRequest request = ctx.getRequest();
 
-//    HttpHeaders headers = request.getHeaders("token");
     String header = request.getHeader("token");
     User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
     Map<String, List<String>> params = Maps.newHashMap();
     params.put("userId", Lists.newArrayList(header));
     params.put("username", Collections.singletonList(user.getUsername()));
+    request.getParameterMap().forEach((k,v) -> params.put(k,Arrays.asList(v)));
+
     ctx.setRequestQueryParams(params);
 
     log.info(String.format("%s request to %s", request.getMethod(), request.getRequestURL().toString()));
