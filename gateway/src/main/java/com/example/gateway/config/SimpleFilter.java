@@ -1,6 +1,5 @@
 package com.example.gateway.config;
 
-
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -27,45 +26,42 @@ public class SimpleFilter implements Filter {
   private AuthenticationManager authenticationManager;
   private TokenExtractor tokenExtractor = new BearerTokenExtractor();
 
-  public SimpleFilter(
-      AuthenticationManager authenticationManager) {
+  public SimpleFilter(AuthenticationManager authenticationManager) {
     this.authenticationManager = authenticationManager;
   }
 
   @Override
-  public void init(FilterConfig filterConfig) throws ServletException {
-
-  }
+  public void init(FilterConfig filterConfig) throws ServletException {}
 
   @Override
-  public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-      FilterChain filterChain) throws IOException, ServletException {
+  public void doFilter(
+      ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+      throws IOException, ServletException {
 
     HttpServletRequest request = (HttpServletRequest) servletRequest;
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
     Authentication preAuthentication = tokenExtractor.extract(request);
 
-    try {
-      Authentication authentication = this.authenticationManager.authenticate(preAuthentication);
-      if (authentication != null) {
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+    if (preAuthentication != null) {
+      try {
+        Authentication authentication = this.authenticationManager.authenticate(preAuthentication);
+        if (authentication != null) {
+          SecurityContextHolder.getContext().setAuthentication(authentication);
 
-      } else {
+        } else {
+          SecurityContextHolder.clearContext();
+        }
+
+      } catch (AuthenticationException exception) {
+        logger.debug("AuthenticationException occurs ");
         SecurityContextHolder.clearContext();
+        exception.printStackTrace();
       }
-
-    } catch (AuthenticationException exception) {
-      logger.debug("AuthenticationException occurs ");
-      SecurityContextHolder.clearContext();
-      exception.printStackTrace();
     }
-
     filterChain.doFilter(request, response);
   }
 
   @Override
-  public void destroy() {
-
-  }
+  public void destroy() {}
 }
