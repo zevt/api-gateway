@@ -2,6 +2,7 @@ package com.example.servicea.controller;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.sun.net.httpserver.Headers;
 import java.util.Arrays;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +41,14 @@ public class RestApi {
   public HttpEntity<?> getAllParams(@RequestParam Map<String, String> params) {
     return new ResponseEntity<>(params, HttpStatus.OK);
   }
+
+  @GetMapping("/headers")
+  public HttpEntity<?> getHeaders(@RequestHeader(value = "x-param") String headers) {
+    ObjectNode node = JsonNodeFactory.instance.objectNode();
+    node.put("message", "success");
+    return  new ResponseEntity<>(node, HttpStatus.OK);
+  }
+
   @GetMapping("/message")
   public HttpEntity<?> getMessage() {
     ObjectNode node = JsonNodeFactory.instance.objectNode();
