@@ -2,43 +2,33 @@ package com.example.servicea.controller;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import java.math.BigInteger;
-import java.security.*;
-import java.security.interfaces.RSAPrivateCrtKey;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.CyclicBarrier;
-
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.jwt.Jwt;
-import org.springframework.security.jwt.JwtHelper;
-import org.springframework.security.jwt.crypto.sign.RsaSigner;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
-
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author Viet Quoc Tran vt on 6/11/18. www.zeroexception.com
@@ -118,9 +108,10 @@ public class RestApi {
         log.debug(publicKey.toString());
         log.debug("============================================================");
         log.debug(getHexString(privateKey.getEncoded()));
-        log.debug(Base64.getEncoder().encodeToString(privateKey.getEncoded()));
+        log.debug("-----BEGIN PRIVATE KEY----- {} -----END PRIVATE KEY-----", Base64.getEncoder().encodeToString(privateKey.getEncoded()));
         log.debug(getHexString(publicKey.getEncoded()));
-        log.debug(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
+        log.debug("-----BEGIN PUBLIC KEY----- {} -----END PUBLIC KEY-----",
+            Base64.getEncoder().encodeToString(publicKey.getEncoded()));
 
         this.rsaStringKey = this.rsaStringKey.replace("-----BEGIN PRIVATE KEY-----", "");
         this.rsaStringKey = this.rsaStringKey.replace("-----END PRIVATE KEY-----", "");
@@ -159,6 +150,14 @@ public class RestApi {
 //        log.debug(jwt.getEncoded());
 
         return ResponseEntity.of(Optional.of(claim));
+    }
+
+
+    @PostMapping("/token")
+    public ResponseEntity<?> verifyToken(@RequestBody String token) {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.
+        return ResponseEntity.of(node);
     }
 
     private String getHexString(byte[] b) {
