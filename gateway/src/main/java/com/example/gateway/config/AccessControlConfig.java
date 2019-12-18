@@ -13,8 +13,8 @@ public class AccessControlConfig implements WebMvcConfigurer {
   public void addCorsMappings(CorsRegistry registry) {
     registry
         .addMapping("/**");
-        //                .allowedMethods("OPTIONS", "GET", "POST", "HEAD", "TRACE", "PATCH")
-        //                .allowCredentials(true)
+    //                .allowedMethods("OPTIONS", "GET", "POST", "HEAD", "TRACE", "PATCH")
+    //                .allowCredentials(true)
 //        .allowedOrigins(allowedOrigins.split("(\\s*)([,])(\\s*)"))
 //        .allowedOrigins("**");
   }

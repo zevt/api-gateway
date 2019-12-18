@@ -53,16 +53,17 @@ public class PreFilter extends ZuulFilter {
     HttpServletRequest request = ctx.getRequest();
 
     String header = request.getHeader("token");
-    User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     Map<String, List<String>> params = Maps.newHashMap();
     params.put("userId", Lists.newArrayList(header));
     params.put("username", Collections.singletonList(user.getUsername()));
     params.put("x-param", Collections.singletonList("one more param"));
-    request.getParameterMap().forEach((k,v) -> params.put(k,Arrays.asList(v)));
+    request.getParameterMap().forEach((k, v) -> params.put(k, Arrays.asList(v)));
     ctx.addZuulRequestHeader("Authorization", "Bearer " + "token");
     ctx.setRequestQueryParams(params);
 
-    log.info(String.format("%s request to %s", request.getMethod(), request.getRequestURL().toString()));
+    log.info(
+        String.format("%s request to %s", request.getMethod(), request.getRequestURL().toString()));
 
     return null;
   }

@@ -23,13 +23,16 @@ public class RestApi {
   private String appName;
 
   @GetMapping("/userId")
-  public int getUserId(@RequestParam(value = "userId", required = false, defaultValue = "0") int userId) {
+  public int getUserId(
+      @RequestParam(value = "userId", required = false, defaultValue = "0") int userId) {
     return userId;
   }
+
   @GetMapping("/all-params")
   public HttpEntity<?> getAllParams(@RequestParam Map<String, String> params) {
     return new ResponseEntity<>(params, HttpStatus.OK);
   }
+
   @GetMapping("/appName")
   public String getAppName() {
     return this.appName;
