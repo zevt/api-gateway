@@ -10,3 +10,11 @@ zuul:
       path: /b/**
       url: http://localhost:8082/api
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
