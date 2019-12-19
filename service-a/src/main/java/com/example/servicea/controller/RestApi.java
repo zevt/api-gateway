@@ -2,6 +2,7 @@ package com.example.servicea.controller;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.InvalidKeyException;
@@ -9,6 +10,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Base64;
@@ -21,6 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.jwt.Jwt;
+import org.springframework.security.jwt.JwtHelper;
+import org.springframework.security.jwt.crypto.sign.RsaVerifier;
+import org.springframework.security.jwt.crypto.sign.SignatureVerifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,6 +47,10 @@ import sun.security.rsa.RSAPrivateCrtKeyImpl;
 public class RestApi {
 
     private String rsaStringKey = "-----BEGIN RSA PRIVATE KEY-----                                  MIIEogIBAAKCAQEAtnOsK9MBatlsPSey8SV8qYwpgJINmDNubYl91Ilk3RiZJhk5 e1CzY0pTuMfMMzY8ptalFnhop1IahQI0l00AsHZrjaavA0i9ElpWcZEYO3BOQOK1 PMweejrKdkZzOakFEDmHeWbsea6CywDEy7WpBfpZSJjxiRkWkXmRWikDPtfyzzcr 4wUtHtZCOjLg/VqHlNLEehS5w/LoeSGoktwT+m05T28qr1ntHg7EulCaBzYN4h7S 9+anwV1LgDT5FE8j2+dsJVD+J3g5rnk58jWv334au5Vk/YQrISrimvtt4yNSqVjd bppD91WH61WZRgbsovxBQnbJh0tdQ7JuiC+uhwIDAQABAoIBAEZTTcDSo1A5ICRu YeXbajK8CN867KyG3oCwJ2U91Df4nEd4H5TtpUeXRbAKqyXuOPCh+Z4wqT4dQoWU NQtArgxWiNxfrEPazK3/TiSWJb37at5NxEf78Z9xe8qdGxrVkFMRqatcxbedUWLI GBLhIZZhSfrWoPsURYOrVSBogIy+7wbG7Mf0fHiP6xENIVrbuPAXsF3fwfpXwXZE bAsQnzEFBg23JKrZ48t+hGAVTzcz6VAcadkQqMm3NpWH6HBa7a77UqcLd98PijCe AOk/FuEs8+ZsDGTI54Hk37E3IXMmIGqEwKkxnZfTj8sA8S9SfbKox3z7LZQsC0da dUHCDdkCgYEA6Zsxt085LUiB8OaXqJ+QSPbgHssYBNMuyOB/GipXZpNPWj4qthYF nZ8CpQ0Xdq7brxaqZ/jM7UBeczIrbBKerfRc3m+SJakwXCRxpSf22mXnPOCrDZzo jVDRZTnu3YbPNrvp9oCn05w9vS+HfL60BcTml7eQsH0Wt0iIs6vFlBMCgYEAx/Eg PpqS7etiYKjxxbKxjLPuxXLUSwl/CmKXKYw8DZcRzQA1pUDXjU+du7Ty2rfgbi2g pN44Uz4j4eT2AJMHvvuq7QdLTnhjeoGV+0t/PEYJ0W1DjfY8fnC/82F8lKJrxEfH I4Mj0JshHocPLmR8WbodDwn8LK/AaienoYsnwj0CgYAZUKYclUs+6wKZ1oNM1K3Q GmDDNYMO0svZHOrpLPl3tjL9NotuXAiTwi2JMVf/lodb+/rPdZjPhRA3L5KhDYuA kmCWAkU2K5WABrsCCMipdi2O3VHsEbrpxX5Ll/GYtAk0hzydZ+fH+MCABeyKyie8 EFBk1JGrboLNreCSh+TLXQKBgCsI8WHIL3vaQDCB7Jga4DBiwi/piVwlTRzVH6gn sP1T2NcBBortK/gUfOTcC7GcBkhwtbUGx6TTKTID8Bcrjm1DCgU+nqzjKLZDkh6m n1o/0PksxW+W4mpspkQiZYgwdXWn5Wr1XQ4Xdcd2VoQryMAfWQXVpluP8KBorKIO q54ZAoGAXM+nPf/jU+c+CCchny5jC69rwig2XWPIgrzkbcNsJZGkdayFk617sT7o abJbDnAvQwbjgpT3ezqmi6YKawRG3mbAElX1GV6TlANS9WN/padgPfghJ0q0qMeR yYwfFZE2uyP0ZrZQqisrOzLXrOJuVTLObH4pEtgS81p8Q6QIDxA=             -----END RSA PRIVATE KEY-----                                    ";
+
+    private RSAPrivateCrtKey privateKey;
+    private PublicKey publicKey;
+    private String publicKeyStr;
 
     @Value("${app.name}")
     private String appName;
@@ -97,8 +107,8 @@ public class RestApi {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(512);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
-        RSAPrivateCrtKeyImpl privateKey = (RSAPrivateCrtKeyImpl)keyPair.getPrivate();
-        PublicKey publicKey = keyPair.getPublic();
+        privateKey = (RSAPrivateCrtKeyImpl)keyPair.getPrivate();
+        publicKey = keyPair.getPublic();
 
 //        DatatypeConverter.
         Base64.getEncoder().encodeToString(privateKey.getEncoded());
@@ -110,8 +120,9 @@ public class RestApi {
         log.debug(getHexString(privateKey.getEncoded()));
         log.debug("-----BEGIN PRIVATE KEY----- {} -----END PRIVATE KEY-----", Base64.getEncoder().encodeToString(privateKey.getEncoded()));
         log.debug(getHexString(publicKey.getEncoded()));
-        log.debug("-----BEGIN PUBLIC KEY----- {} -----END PUBLIC KEY-----",
+        this.publicKeyStr = String.format("-----BEGIN PUBLIC KEY----- %s -----END PUBLIC KEY-----",
             Base64.getEncoder().encodeToString(publicKey.getEncoded()));
+        log.debug(publicKeyStr);
 
         this.rsaStringKey = this.rsaStringKey.replace("-----BEGIN PRIVATE KEY-----", "");
         this.rsaStringKey = this.rsaStringKey.replace("-----END PRIVATE KEY-----", "");
@@ -155,9 +166,31 @@ public class RestApi {
 
     @PostMapping("/token")
     public ResponseEntity<?> verifyToken(@RequestBody String token) {
-        ObjectNode node = JsonNodeFactory.instance.objectNode();
-        node.
-        return ResponseEntity.of(node);
+
+        Claims claims = Jwts.parser()
+//            Verify keys by using publicKey succeeded
+//            .setSigningKey(this.publicKey)
+//            Verify keys by using privateKey also succeeded
+            .setSigningKey(this.privateKey)
+
+//            .setSigningKey(this.publicKeyStr)
+            .parseClaimsJws(token).getBody();
+
+        return ResponseEntity.of(Optional.of(claims));
+    }
+
+    /**
+     * Verify token by using JwtHelp from Spring Security
+     * @param token
+     * @return
+     */
+
+    @PostMapping("/token1")
+    public ResponseEntity<?> verifyToken1(@RequestBody String token) {
+
+        SignatureVerifier verifier = new RsaVerifier(this.publicKeyStr);
+        Jwt jwt = JwtHelper.decodeAndVerify(token, verifier);
+        return ResponseEntity.of(Optional.of(jwt.getClaims()));
     }
 
     private String getHexString(byte[] b) {
